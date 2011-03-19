@@ -44,9 +44,7 @@ public class LoginActivity extends Activity {
 		switch (view.getId()) {
 		case R.id.button1:
 			if (text.getText().length() == 0) {
-				Toast.makeText(this, this.getString(R.string.ErrorEmptyLogin),
-						Toast.LENGTH_LONG).show();
-				return;
+				t(this.getString(R.string.ErrorEmptyLogin));
 			}
 
 			try {
@@ -99,13 +97,15 @@ public class LoginActivity extends Activity {
 			
 			t(this.getString(R.string.SuccessAuthenticated) + login);
 
-			Intent i = new Intent(LoginActivity.this, ChatActivity.class);
+			Intent i = new Intent(LoginActivity.this, UsersActivity.class);
+			//i.putExtra("icq", "asda");
 			startActivity(i);
+			
 			break;
 		}
 	}
 	
 	public void t(String text) {
-		Toast.makeText(this, text, Toast.LENGTH_LONG).show();
+		Toast.makeText(getApplicationContext(), text, Toast.LENGTH_LONG).show();
 	}
 }
