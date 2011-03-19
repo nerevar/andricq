@@ -1,0 +1,17 @@
+<resources>
+    <string name="hello">Мухаха, наша строчка helloworld</string>
+    <string name="app_name">Andricq</string>
+    <string name="user_name">Логин:</string>
+    <string name="button_connect">Подключиться!</string>
+    <string name="default_login">NeReVaR4uK</string>
+    <string name="connectButtonClick">connectButtonClick</string>
+    <string name="SuccessConnected">Успешное соединение с сервером.</string>
+    <string name="ErrorEmptyLogin">Введите ваш логин!</string>
+    <string name="ErrorJSONException">Неверный формат ответа сервера</string>
+    <string name="ErrorClientProtocolException">Ошибка HTTP доступа к серверу</string>
+    <string name="ErrorIOException">Ошибка ввода-вывода</string>
+    <string name="ErrorServerRefuseException">Сервер ответил отказом</string>
+    <string name="ErrorEmptyResponseException">Пустой ответ от сервера</string>
+    <string name="ErrorUnknownServerResponseException">Неизвестная ошибка</string>
+    <string name="SuccessAuthenticated">Успешно авторизировались под ником: </string>
+</resources>
