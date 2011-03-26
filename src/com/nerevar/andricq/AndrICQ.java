@@ -15,12 +15,16 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.nerevar.andricq.errors.EmptyResponseException;
@@ -30,34 +34,69 @@ import com.nerevar.andricq.errors.UnknownServerResponseException;
 /**
  * Класс отвечающий за работу клиента с сервером
  */
-public class AndrICQ {
+public class AndrICQ implements Parcelable{
+
+	/**
+	 * Current user in chat with you 
+	 */
+	public String buddy; 
+	public int buddy_id;
+	
+	public void setBuddy(int buddy_id, String buddy) {
+		this.buddy = buddy;
+		this.buddy_id = buddy_id;
+	}
+	
+
 	public static final String SERVER = "http://192.168.1.77/api.php";
 
-	public AndrICQ(String l){
-		this.login = l;
-	}
-	public AndrICQ(){
-	}
+	public void writeToParcel(Parcel out, int flags) {
+        out.writeString(this.login);
+        out.writeInt(this.buddy_id);
+        out.writeString(this.buddy);
+    }
 	
-	private ArrayList<HashMap<String, String>> users;
-	public void setUsers(ArrayList<HashMap<String, String>> u) {
-		this.users = u;
-	}
-	public ArrayList<HashMap<String, String>> getUsers() {
-		return this.users;
-	}
-	
-	public String login;
-		
-	public String text() 
-	throws ClientProtocolException, IOException, JSONException, ServerRefuseException, EmptyResponseException, UnknownServerResponseException
-	{
-		List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
-		nameValuePairs.add(new BasicNameValuePair("type", "text"));
+    public AndrICQ(Parcel in) {
+    	this.login = in.readString();
+    	this.buddy_id = in.readInt();
+    	this.buddy = in.readString();
+    }
+    
+    public int describeContents() {
+        return 0;
+    }
 
-		return this.postData(SERVER, nameValuePairs);
+    public static final Parcelable.Creator<AndrICQ> CREATOR = new Parcelable.Creator<AndrICQ>() {
+        public AndrICQ createFromParcel(Parcel in) {
+            return new AndrICQ(in);
+        }
+
+        public AndrICQ[] newArray(int size) {
+            return new AndrICQ[size];
+        }
+    };
+    
+    
+
+	public AndrICQ(){
+		
 	}
 		
+	public Users users = new Users();
+	
+	public class Users {
+		private ArrayList<HashMap<String, String>> users;
+		
+		public void setUsers(ArrayList<HashMap<String, String>> u) {
+			this.users = u;
+		}
+		
+		public ArrayList<HashMap<String, String>> getUsers() {
+			return this.users;
+		}	
+	}
+	
+	
 	/**
 	 * Устанавливает соединение с сервером
 	 * @return - true или false в зависимости от результата соединение
@@ -87,15 +126,23 @@ public class AndrICQ {
 		throw new UnknownServerResponseException();
 	}
 	
+	public String login;
+
+	/**
+	 * Задаёт значение логина пользователя
+	 * @param login
+	 */
+	public void setLogin(String login) {
+		this.login = login;
+	}
+	
 	/**
 	 * Авторизирует пользователя
 	 * @return
 	 */
-	public boolean auth(String login) 
+	public boolean auth() 
 	throws ClientProtocolException, IOException, JSONException, EmptyResponseException, ServerRefuseException, UnknownServerResponseException 
 	{
-		this.login = login;
-		
 		List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
 		nameValuePairs.add(new BasicNameValuePair("type", "auth"));
 		nameValuePairs.add(new BasicNameValuePair("login", this.login));
@@ -134,9 +181,9 @@ public class AndrICQ {
 			throw new EmptyResponseException();
 		}
 		
-		this.setUsers(this.parseUsersList(response));
+		this.users.setUsers(this.parseUsersList(response));
 		
-		return this.getUsers();
+		return this.users.getUsers();
 				
 	}
 	
@@ -187,8 +234,15 @@ public class AndrICQ {
 	private String postData(String host, List<NameValuePair> nameValuePairs) 
 		throws ClientProtocolException, IOException 
 	{
+		HttpParams httpParameters = new BasicHttpParams();
+		
+		int timeoutConnection = 3000;
+		HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
 
-		HttpClient httpclient = new DefaultHttpClient();
+		int timeoutSocket = 5000;
+		HttpConnectionParams.setSoTimeout(httpParameters, timeoutSocket);		
+		
+		HttpClient httpclient = new DefaultHttpClient(httpParameters);
 		HttpPost httppost = new HttpPost(host);
 
 		httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs,	HTTP.UTF_8));
