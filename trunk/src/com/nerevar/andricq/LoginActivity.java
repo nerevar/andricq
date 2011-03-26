@@ -1,20 +1,11 @@
 package com.nerevar.andricq;
 
-import java.io.IOException;
-
-import org.apache.http.client.ClientProtocolException;
-import org.json.JSONException;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
-
-import com.nerevar.andricq.errors.EmptyResponseException;
-import com.nerevar.andricq.errors.ServerRefuseException;
-import com.nerevar.andricq.errors.UnknownServerResponseException;
 
 /**
  * First Login activity, you can enter your login and
@@ -49,56 +40,25 @@ public class LoginActivity extends Activity {
 
 			try {
 				icq.connect();
-			} catch(JSONException e) {
-				t(this.getString(R.string.ErrorJSONException));
-				return;
-			} catch(ClientProtocolException e) {
-				t(this.getString(R.string.ErrorClientProtocolException));
-				return;
-			} catch(IOException e) {
-				t(this.getString(R.string.ErrorIOException));
-				return;
-			} catch(ServerRefuseException e) {
-				t(this.getString(R.string.ErrorServerRefuseException));
-				return;
-			} catch (EmptyResponseException e) {
-				t(this.getString(R.string.ErrorEmptyResponseException));
-				return;
-			} catch (UnknownServerResponseException e) {
-				t(this.getString(R.string.ErrorUnknownServerResponseException));
-				return;
+			} catch (Exception e) {
+				t(e.toString());
 			}
 			
 			t(this.getString(R.string.SuccessConnected));
 			
 			String login = text.getText().toString();
+			icq.setLogin(login);
 			
 			try {
-				icq.auth(login);
-			} catch(JSONException e) {
-				t(this.getString(R.string.ErrorJSONException));
-				return;
-			} catch(ClientProtocolException e) {
-				t(this.getString(R.string.ErrorClientProtocolException));
-				return;
-			} catch(IOException e) {
-				t(this.getString(R.string.ErrorIOException));
-				return;
-			} catch(EmptyResponseException e) {
-				t(this.getString(R.string.ErrorEmptyResponseException));
-				return;
-			} catch(ServerRefuseException e) {
-				t(this.getString(R.string.ErrorServerRefuseException));
-				return;
-			} catch(UnknownServerResponseException e) {
-				t(this.getString(R.string.ErrorUnknownServerResponseException));
-				return;
+				icq.auth();
+			} catch (Exception e) {
+				t(e.toString());
 			}
 			
 			t(this.getString(R.string.SuccessAuthenticated) + login);
 
 			Intent i = new Intent(LoginActivity.this, UsersActivity.class);
-			//i.putExtra("icq", "asda");
+			i.putExtra("icq", icq);
 			startActivity(i);
 			
 			break;
