@@ -5,6 +5,7 @@
     <string name="button_connect">Подключиться!</string>
     <string name="default_login">NeReVaR4uK</string>
     <string name="connectButtonClick">connectButtonClick</string>
+    <string name="sendMessageClick">sendMessageClick</string>
     <string name="SuccessConnected">Успешное соединение с сервером.</string>
     <string name="ErrorEmptyLogin">Введите ваш логин!</string>
     <string name="ErrorJSONException">Неверный формат ответа сервера</string>
