@@ -39,6 +39,7 @@
 			android:text=">"
 			android:layout_width="50px"
 			android:layout_alignParentRight="true"
-			android:layout_height="wrap_content"></Button>
+			android:layout_height="wrap_content"
+			android:onClick="@string/sendMessageClick"></Button>			
 	</RelativeLayout>
 </RelativeLayout>

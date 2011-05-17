@@ -2,6 +2,7 @@ package com.nerevar.andricq;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -95,8 +96,7 @@ public class AndrICQ implements Parcelable{
 			return this.users;
 		}	
 	}
-	
-	
+		
 	/**
 	 * Устанавливает соединение с сервером
 	 * @return - true или false в зависимости от результата соединение
@@ -207,6 +207,11 @@ public class AndrICQ implements Parcelable{
 		return out;
 	}
 	
+	/**
+	 * Парсит список пользователей в онлайне
+	 * @param response
+	 * @return
+	 */
 	private ArrayList<HashMap<String, String>> parseUsersList(String response) throws JSONException {
 		ArrayList<HashMap<String, String>> users = new ArrayList<HashMap<String,String>>();
 		
@@ -225,7 +230,7 @@ public class AndrICQ implements Parcelable{
 		
 		return users;
 	}
-
+	
 	/**
 	 * Отправляет HTTP POST сообщение на удаленный сервер
 	 * @param host - удаленный сервер
@@ -255,5 +260,76 @@ public class AndrICQ implements Parcelable{
 		String respEncoded = new String (resp.getBytes("Cp1251"), HTTP.UTF_8);
 		
 		return respEncoded;
+	}
+	
+	/**
+	 * Отправляет сообщение на сервер
+	 * @param message - текст сообщения
+	 * @param from - имя пользователя От кого
+	 * @param to - имя пользователя Кому
+	 * @return
+	 */
+	public void sendMessage(String message, String from, String to) 
+	throws ClientProtocolException, IOException, JSONException, ServerRefuseException, EmptyResponseException, UnknownServerResponseException 
+	{
+		List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
+		nameValuePairs.add(new BasicNameValuePair("type", "send_message"));
+		nameValuePairs.add(new BasicNameValuePair("message", message));
+		nameValuePairs.add(new BasicNameValuePair("from", from));
+		nameValuePairs.add(new BasicNameValuePair("to", to));
+
+		String response = this.postData(SERVER, nameValuePairs);
+		if (response == null) {
+			throw new EmptyResponseException();
+		}
+		
+		HashMap<String, String> resp = this.parseJSON(response);
+		
+		if (resp != null) {
+			if (resp.containsKey("result")) {
+				if (resp.get("result").toString().equals("ok")) {
+					return;
+				}
+			}
+		}
+		
+		throw new UnknownServerResponseException();
+	}	
+	
+	/**
+	 * Загружает список сообщений
+	 */
+	public ArrayList<Message> loadMessages() 
+	throws ClientProtocolException, IOException, JSONException, ServerRefuseException, EmptyResponseException, UnknownServerResponseException
+	{
+		List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
+		nameValuePairs.add(new BasicNameValuePair("type", "load_messages"));
+		nameValuePairs.add(new BasicNameValuePair("user", this.login));
+
+		String response = this.postData(SERVER, nameValuePairs);
+		if (response == null) {
+			throw new EmptyResponseException();
+		}
+		
+		ArrayList<Message> messages = new ArrayList<Message>();
+		
+		JSONObject json = new JSONObject(response);
+		JSONArray jsonMessages = json.getJSONArray("info");
+		for (int i=0; i<jsonMessages.length(); i++) {
+			JSONObject jsonMessage = jsonMessages.getJSONObject(i);
+			
+			boolean isBelongToMe = false;
+			if (jsonMessage.getString("from").equals(this.login)) {
+				isBelongToMe = true;
+			}
+			Message m = new Message(new Date(jsonMessage.getLong("date_timestamp")), 
+									jsonMessage.getString("from"), 
+									jsonMessage.getString("message"), 
+									isBelongToMe);
+						
+			messages.add(m);
+		}
+		
+		return messages;
 	}
 }

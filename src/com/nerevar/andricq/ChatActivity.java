@@ -5,6 +5,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+import com.nerevar.andricq.errors.UnknownServerResponseException;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -14,6 +16,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -28,51 +31,28 @@ public class ChatActivity extends Activity {
 		Intent i = getIntent();
 		icq = (AndrICQ) i.getParcelableExtra("icq");
 		
-		this.testChat();
-	}
-	
-	public void testChat() {
+		/* Временная мера */
+		this.icq = new AndrICQ();
+		icq.login = "NeReVaR4uK";
+		icq.buddy = "firstUser";
+		icq.buddy_id = 1;
 		
-		ListView mList = (ListView) findViewById(R.id.listView1);
-		
-		ArrayList<Message> mess = new ArrayList<ChatActivity.Message>();
-		
-		mess.add(new Message(new Date(), "nerevar", "сообщение", true));
-		mess.add(new Message(new Date(), "user", "ответ на сообщение", false));
-		mess.add(new Message(new Date(), "nerevar", "оооо чень длиннгео осооб ещен фыв фывр ыфврпа ывап ывпа фрамыфвра сообщение", true));
-		mess.add(new Message(new Date(), "nerevar", "оооо чень длиннгео осооб ещен фыв фывр ыфврпа ывап ывпа фрамыфвра сообщение", true));
-		mess.add(new Message(new Date(), "nerevar", "оооо чень длиннгео осооб ещен фыв фывр ыфврпа ывап ывпа фрамыфвра сообщение", true));
-		mess.add(new Message(new Date(), "nerevar", "оооо чень длиннгео осооб ещен фыв фывр ыфврпа ывап ывпа фрамыфвра сообщение", true));
-		mess.add(new Message(new Date(), "nerevar", "оооо чень длиннгео осооб ещен фыв фывр ыфврпа ывап ывпа фрамыфвра сообщение", true));
-		mess.add(new Message(new Date(), "user", "оооо чень длиннгео осооб ещен фыв фывр ыфврпа ывап ывпа фрамыфвра сообщение", false));
-		mess.add(new Message(new Date(), "nerevar", "оооо чень длиннгео осооб ещен фыв фывр ыфврпа ывап ывпа фрамыфвра сообщение", true));
-		mess.add(new Message(new Date(), "nerevar", "оооо чень длиннгео осооб ещен фыв фывр ыфврпа ывап ывпа фрамыфвра сообщение", true));
-		mess.add(new Message(new Date(), "nerevar", "оооо чень длиннгео осооб ещен фыв фывр ыфврпа ывап ывпа фрамыфвра сообщение", true));
-		mess.add(new Message(new Date(), "nerevar", "оооо чень длиннгео осооб ещен фыв фывр ыфврпа ывап ывпа фрамыфвра сообщение", true));
-		mess.add(new Message(new Date(), "nerevar", "оооо чень длиннгео осооб ещен фыв фывр ыфврпа ывап ывпа фрамыфвра сообщение", true));
-		mess.add(new Message(new Date(), "nerevar", "последнее сообщение", true));
-
-		//mList.setTranscriptMode(ListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
-		mList.setAdapter(new MessagesListAdapter(this, R.layout.userslist_row, mess));
-		mList.setSelection(mess.size() - 1);
+		try {
+			ArrayList<Message> mess = icq.loadMessages();
+			
+			ListView mList = (ListView) findViewById(R.id.listView1);
+			
+			//mList.setTranscriptMode(ListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
+			mList.setAdapter(new MessagesListAdapter(this, R.layout.userslist_row, mess));
+			mList.setSelection(mess.size() - 1);			
+			
+		} catch (Exception e) {
+			t("Error: " + e);
+		}
 	}
 	
 	public void t(String text) {
 		Toast.makeText(getApplicationContext(), text, Toast.LENGTH_LONG).show();
-	}
-	
-	
-	public class Message {
-		public Date date;
-		public String user;
-		public String message;
-		boolean yours = true;
-		public Message(Date d, String u, String m, boolean yours) {
-			this.date = d;
-			this.user = u;
-			this.message = m;
-			this.yours = yours;
-		}
 	}
 	
 	private class MessagesListAdapter extends ArrayAdapter<Message> {
@@ -133,5 +113,25 @@ public class ChatActivity extends Activity {
                 return v;
     	}
 	}	
+	
+	/**
+	 * Обработчик нажатия кнопки Отправить
+	 * отправляет сообщение
+	 * @param view
+	 */
+	public void sendMessageClick(View view) {
+		EditText text = (EditText) findViewById(R.id.chat_text);
+		String message = text.getText().toString();
+		String from = icq.login;
+		String to = icq.buddy;
+		
+		try {
+			icq.sendMessage(message, from, to);
+		} catch(UnknownServerResponseException e) {
+			t("Ошибка при отправке сообщения: " + e);
+		} catch (Exception e) {
+			t("Ошибка при отправке сообщения: " + e);
+		}
+	}
 	
 }
