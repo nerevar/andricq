@@ -3,7 +3,7 @@
     <string name="app_name">Andricq</string>
     <string name="user_name">Логин:</string>
     <string name="button_connect">Подключиться!</string>
-    <string name="default_login">NeReVaR4uK</string>
+    <string name="default_login">User</string>
     <string name="connectButtonClick">connectButtonClick</string>
     <string name="sendMessageClick">sendMessageClick</string>
     <string name="SuccessConnected">Успешное соединение с сервером.</string>

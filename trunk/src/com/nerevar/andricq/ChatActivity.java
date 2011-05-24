@@ -1,17 +1,14 @@
 package com.nerevar.andricq;
 
-import java.text.Format;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
 
-import com.nerevar.andricq.errors.UnknownServerResponseException;
+import java.util.ArrayList;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,31 +20,75 @@ import android.widget.Toast;
 
 public class ChatActivity extends Activity {
 	AndrICQ icq = null;
+	ArrayList<Message> Messages = null;
+	User Buddy = null; 
+		
+	private MessagesListAdapter ad = null;
 	
+	private Handler handler = new Handler();
+	private Runnable timerAction = new Runnable() {
+		public void run() {
+			checkNewMessages();
+			handler.postDelayed(this, 5000);
+		}
+	};	
+	
+	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.chat);		
 
+		// получаем объект icq
 		Intent i = getIntent();
 		icq = (AndrICQ) i.getParcelableExtra("icq");
 		
-		/* Временная мера */
-		this.icq = new AndrICQ();
-		icq.login = "NeReVaR4uK";
-		icq.buddy = "firstUser";
-		icq.buddy_id = 1;
+		Buddy = icq.findUser(icq.buddy);
 		
+		// устанавливаем имя собеседника
+		TextView tTextBuddy = (TextView) findViewById(R.id.buddy_name);	
+		tTextBuddy.setText(Buddy.login);		
+		
+		fetchNewMessages();
+	}
+
+	@Override
+	public void onStart() {
+		super.onStart();
+		// Запуск таймера
+		handler.postDelayed(timerAction, 5000);
+	}
+	
+	@Override
+	public void onStop() {
+		super.onStop();
+		// Стоп таймера
+		handler.removeCallbacks(timerAction);
+	}	
+	
+	public void fetchNewMessages() {
 		try {
-			ArrayList<Message> mess = icq.loadMessages();
+			// загрузка сообщений собеседника
+			Messages = Buddy.loadMessages(icq.login);
 			
 			ListView mList = (ListView) findViewById(R.id.listView1);
-			
-			//mList.setTranscriptMode(ListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
-			mList.setAdapter(new MessagesListAdapter(this, R.layout.userslist_row, mess));
-			mList.setSelection(mess.size() - 1);			
-			
+			ad = new MessagesListAdapter(this, R.layout.userslist_row, Messages);
+			mList.setAdapter(ad);
 		} catch (Exception e) {
-			t("Error: " + e);
+			t("Ошибка при загрузке списка сообщений: " + e);
+		}
+	}
+	
+	public void checkNewMessages() {
+		int total = 0;
+		try {
+			total = Buddy.checkNewMessages(icq.login);
+		} catch (Exception e) {
+			t("Ошибка при обновлении сообщений: " + e);
+		}
+		
+		if ((total > 0) && (total > Messages.size())) {
+			fetchNewMessages();
+			// TODO: sound
 		}
 	}
 	
@@ -94,21 +135,17 @@ public class ChatActivity extends Activity {
 					TextView tDate = (TextView) v.findViewById(R.id.tv_date);
 					TextView tName = (TextView) v.findViewById(R.id.tv_user_name);
 					TextView tText = (TextView) v.findViewById(R.id.tv_text);
-					if (tDate != null) {
-						Format formatter = new SimpleDateFormat("[HH:mm]");
-						tDate.setText(formatter.format(m.date));
-					}					
-					if (tName != null) {
-						tName.setText(m.user + ":");
-						if (m.yours) {
-							tName.setTextColor(Color.RED);
-						} else {
-							tName.setTextColor(Color.BLUE);
-						}
-					}					
-					if (tText != null) {
-						tText.setText(m.message);
-					}					
+						
+					tDate.setText(m.date_str);
+						
+					tName.setText(m.from + ":");
+					if (m.yours) {
+						tName.setTextColor(Color.RED);
+					} else {
+						tName.setTextColor(Color.BLUE);
+					}
+
+					tText.setText(m.message);
 				}
                 return v;
     	}
@@ -126,11 +163,12 @@ public class ChatActivity extends Activity {
 		String to = icq.buddy;
 		
 		try {
-			icq.sendMessage(message, from, to);
-		} catch(UnknownServerResponseException e) {
-			t("Ошибка при отправке сообщения: " + e);
+			Message m = icq.findUser(to).sendMessage(from, message);
+			Messages.add(m);
+			ad.notifyDataSetChanged();
+			text.setText("");
 		} catch (Exception e) {
-			t("Ошибка при отправке сообщения: " + e);
+			t("Ошибка при отправке сообщения: " + e + " " + e.getStackTrace());
 		}
 	}
 	
