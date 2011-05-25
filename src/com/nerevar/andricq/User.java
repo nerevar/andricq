@@ -25,8 +25,7 @@ public class User extends NetworkEntity implements Parcelable {
 	public String login;
 	public String status;
 	
-	public int total_received = 0;
-	public int new_messages = 0;
+	public int unread = 0;
 	public ArrayList<Message> MessageList = new ArrayList<Message>();  		
 	
 	public User() {
@@ -69,8 +68,8 @@ public class User extends NetworkEntity implements Parcelable {
 		JSONObject json = new JSONObject(response);
 		
 		try {
-			int total = json.getJSONObject("info").getInt("total");
-			return total;
+			int unread = json.getJSONObject("info").getInt("unread");
+			return unread;
 		} catch(Exception e) {
 			return 0;
 		}
@@ -123,9 +122,9 @@ public class User extends NetworkEntity implements Parcelable {
 			user.login = jsonUser.getString("login");
 			user.status = jsonUser.getString("status");
 			try {
-				user.total_received = jsonUser.getInt("total_received");
+				user.unread = jsonUser.getInt("unread");
 			} catch(Exception e) {
-				user.total_received = 0;
+				user.unread = 0;
 			}
 			
 			users.add(user);
@@ -145,8 +144,7 @@ public class User extends NetworkEntity implements Parcelable {
 		out.writeInt(this.id);
 		out.writeString(this.login);
 		out.writeString(this.status);
-		out.writeInt(this.new_messages);
-		out.writeInt(this.total_received);
+		out.writeInt(this.unread);
 		out.writeTypedList(this.MessageList);
 	}
 	
@@ -168,8 +166,7 @@ public class User extends NetworkEntity implements Parcelable {
     	this.id = in.readInt();
     	this.login = in.readString();
     	this.status = in.readString();
-    	this.new_messages = in.readInt();
-    	this.total_received = in.readInt();
+    	this.unread = in.readInt();
     	in.readTypedList(this.MessageList, Message.CREATOR);
     }
 }	

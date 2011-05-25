@@ -9,9 +9,11 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -24,12 +26,22 @@ public class ChatActivity extends Activity {
 	User Buddy = null; 
 		
 	private MessagesListAdapter ad = null;
+	private ListView mList = null;
 	
 	private Handler handler = new Handler();
 	private Runnable timerAction = new Runnable() {
 		public void run() {
 			checkNewMessages();
-			handler.postDelayed(this, 5000);
+			handler.postDelayed(this, 3000);
+		}
+	};	
+	
+	TextView.OnEditorActionListener onSendListener = new TextView.OnEditorActionListener(){
+		public boolean onEditorAction(TextView exampleView, int actionId, KeyEvent event) {
+			if(actionId == EditorInfo.IME_NULL){
+				sendMessageClick(exampleView);
+			}
+			return true;
 		}
 	};	
 	
@@ -44,18 +56,25 @@ public class ChatActivity extends Activity {
 		
 		Buddy = icq.findUser(icq.buddy);
 		
+		mList = (ListView) findViewById(R.id.listView1);
+		
 		// устанавливаем имя собеседника
 		TextView tTextBuddy = (TextView) findViewById(R.id.buddy_name);	
 		tTextBuddy.setText(Buddy.login);		
 		
 		fetchNewMessages();
+		
+		EditText text = (EditText) findViewById(R.id.chat_text);
+		text.setOnEditorActionListener(onSendListener);
+
+		
 	}
 
 	@Override
 	public void onStart() {
 		super.onStart();
 		// Запуск таймера
-		handler.postDelayed(timerAction, 5000);
+		handler.postDelayed(timerAction, 3000);
 	}
 	
 	@Override
@@ -70,23 +89,23 @@ public class ChatActivity extends Activity {
 			// загрузка сообщений собеседника
 			Messages = Buddy.loadMessages(icq.login);
 			
-			ListView mList = (ListView) findViewById(R.id.listView1);
 			ad = new MessagesListAdapter(this, R.layout.userslist_row, Messages);
 			mList.setAdapter(ad);
+			mList.setSelection(Messages.size() - 1);
 		} catch (Exception e) {
 			t("Ошибка при загрузке списка сообщений: " + e);
 		}
 	}
 	
 	public void checkNewMessages() {
-		int total = 0;
+		int unread = 0;
 		try {
-			total = Buddy.checkNewMessages(icq.login);
+			unread = Buddy.checkNewMessages(icq.login);
 		} catch (Exception e) {
 			t("Ошибка при обновлении сообщений: " + e);
 		}
 		
-		if ((total > 0) && (total > Messages.size())) {
+		if (unread > 0) {
 			fetchNewMessages();
 			// TODO: sound
 		}
@@ -162,13 +181,15 @@ public class ChatActivity extends Activity {
 		String from = icq.login;
 		String to = icq.buddy;
 		
-		try {
-			Message m = icq.findUser(to).sendMessage(from, message);
-			Messages.add(m);
-			ad.notifyDataSetChanged();
-			text.setText("");
-		} catch (Exception e) {
-			t("Ошибка при отправке сообщения: " + e + " " + e.getStackTrace());
+		if ((message != null) && (message.length() > 0)) {		
+			try {
+				Message m = icq.findUser(to).sendMessage(from, message);
+				Messages.add(m);
+				ad.notifyDataSetChanged();
+				text.setText("");
+			} catch (Exception e) {
+				t("Ошибка при отправке сообщения: " + e + " " + e.getStackTrace());
+			}
 		}
 	}
 	

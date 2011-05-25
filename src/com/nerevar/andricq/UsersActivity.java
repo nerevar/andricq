@@ -1,7 +1,6 @@
 package com.nerevar.andricq;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
 import android.app.Activity;
 import android.content.Context;
@@ -47,9 +46,9 @@ public class UsersActivity extends Activity {
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 				User u = (User) uList.getItemAtPosition(position);
 
-				icq.setBuddy( u.id, u.login);
+				icq.setBuddy(u.id, u.login);
 				
-				icq.findUser(u.login).new_messages = 0;
+				icq.findUser(u.login).unread = 0;
 				
 				Intent i = new Intent(UsersActivity.this, ChatActivity.class);
 				i.putExtra("icq", icq);
@@ -75,32 +74,16 @@ public class UsersActivity extends Activity {
 	
 
 	public void reloadUsersList() {
-		ArrayList<User> userList = new ArrayList<User>();
 		try {
 			// get users list from server
-			 userList = User.reloadUsersList(icq.login);
+			icq.UserList = User.reloadUsersList(icq.login);
 		} catch (Exception e) {
 			t(e.toString());
 		}
 		
-		if (icq.UserList.size() > 0) {
-			// Проверка новых сообщений
-			Iterator<User> it = userList.iterator();
-			while (it.hasNext()) {
-				User u = it.next();
-				User fu = icq.findUser(u.login);
-				
-				if (fu != null) {
-					if (u.total_received > fu.total_received) {
-						u.new_messages = u.total_received - fu.total_received; 
-					} else {
-						u.new_messages = fu.new_messages;
-					}
-				}
-			}
+		if (icq.UserList.size() < 0) {
+			t("Никого нет в онлайне =(");
 		}
-		
-		icq.UserList = userList;
 		
 		ListView uList = (ListView) findViewById(R.id.usersListView);
 		uList.setAdapter(new UsersListAdapter(this, R.layout.userslist_row, this.icq.UserList));
@@ -153,8 +136,8 @@ public class UsersActivity extends Activity {
 					ImageView is = (ImageView) v.findViewById(R.id.img_status);
 					
 					
-					if (u.new_messages > 0) {
-						tt.setText(u.login + " (+" + u.new_messages + ")");
+					if (u.unread > 0) {
+						tt.setText(u.login + " (+" + u.unread + ")");
 					} else {
 						tt.setText(u.login);
 					}
