@@ -20,87 +20,104 @@ import com.nerevar.andricq.errors.EmptyResponseException;
 import com.nerevar.andricq.errors.ServerRefuseException;
 import com.nerevar.andricq.errors.UnknownServerResponseException;
 
+/**
+ * Класс Пользователь
+ */
 public class User extends NetworkEntity implements Parcelable {
-	public int id;
-	public String login;
-	public String status;
+	public int id; // id пользователя
+	public String login; // его логин
+	public String status; // статус
 	
-	public int unread = 0;
-	public ArrayList<Message> MessageList = new ArrayList<Message>();  		
+	public int unread = 0; // количество новых непрочитанных сообщений
+	public ArrayList<Message> MessageList = new ArrayList<Message>(); // история переписки 		
 	
+	/**
+	 * Конструктор
+	 */
 	public User() {
 		
 	}
 	
 	/**
 	 * Отправляет сообщение указанному пользователю
-	 * @param message
+	 * @param from - строка "От кого"
+	 * @param message - текст сообщения
 	 */
 	public Message sendMessage(String from, String message)
 	throws IOException, JSONException, EmptyResponseException, UnknownServerResponseException
 	{
 		DateFormat df = new SimpleDateFormat("dd.MM.yyyy HH:mm");
 		Message m = new Message(df.format(new java.util.Date()), from, login, message, true);
-		MessageList.add(m);
 		m.send();
+
+		MessageList.add(m);
 		return m;
 	}
 	
+	/***
+	 * Возвращает историю переписки этого пользователя с пользователем icq_login
+	 */
 	public ArrayList<Message> loadMessages(String icq_login)
 	throws IOException, JSONException, EmptyResponseException
 	{
 		return Message.loadMessages(icq_login, this.login);
 	}
 	
+	/***
+	 * Проверяет и возвращает наличие новых сообщений на сервере для пользователя user
+	 */
 	public int checkNewMessages(String user)
-	throws ClientProtocolException, IOException, JSONException, EmptyResponseException 
 	{
-		List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
-		nameValuePairs.add(new BasicNameValuePair("type", "check_new_messages"));
-		nameValuePairs.add(new BasicNameValuePair("user", user));
-		nameValuePairs.add(new BasicNameValuePair("buddy", this.login));
-
-		String response = postData(SERVER, nameValuePairs);
-		if (response == null) {
-			throw new EmptyResponseException();
-		}
-
-		JSONObject json = new JSONObject(response);
-		
 		try {
+			// формирует запрос
+			List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
+			nameValuePairs.add(new BasicNameValuePair("type", "check_new_messages"));
+			nameValuePairs.add(new BasicNameValuePair("user", user));
+			nameValuePairs.add(new BasicNameValuePair("buddy", this.login));
+	
+			// отправляет запрос
+			String response = postData(SERVER, nameValuePairs);
+			if (response == null) {
+				throw new EmptyResponseException();
+			}
+			
+			// получает количество непрочитанных сообщений
+			JSONObject json = new JSONObject(response);			
 			int unread = json.getJSONObject("info").getInt("unread");
+			
 			return unread;
 		} catch(Exception e) {
 			return 0;
 		}
 	}
 	
-	
-	/**
-	 * Returns array of users with their information
-	 * and saves them to public class variable - users
+	/***
+	 * Загружает и возвращает список пользователей в онлайне с их информацией
+	 * в списке я не отображаюсь (указывается icq_login)
 	 */
 	public static ArrayList<User> reloadUsersList(String icq_login)
 	throws ClientProtocolException, IOException, JSONException, EmptyResponseException, ServerRefuseException, UnknownServerResponseException
 	{
+		// формирует параметры запроса
 		List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
 		nameValuePairs.add(new BasicNameValuePair("type", "get_users_list"));
 		nameValuePairs.add(new BasicNameValuePair("user", icq_login));
 
+		// отправляет запрос
 		String response = postData(SERVER, nameValuePairs);
 		if (response == null) {
 			throw new EmptyResponseException();
 		}
 		
+		// возвращает список пользователей
 		return parseUsersList(response);		
 	}
 	
 
 	
 	/**
-	 * Парсит список пользователей в онлайне
-	 * @param response
-	 * @return
+	 * Парсит json и возвращает список объектов пользователей 
+	 * @param response - входящая строка в формате JSON
 	 */
 	private static ArrayList<User> parseUsersList(String response) throws JSONException {
 		ArrayList<User> users = new ArrayList<User>();
@@ -108,12 +125,14 @@ public class User extends NetworkEntity implements Parcelable {
 		JSONObject json = new JSONObject(response);
 		JSONArray jsonUsers = null;
 		
+		// получаем массив json
 		try {
 			jsonUsers = json.getJSONArray("info");
 		} catch(Exception e) {
 			return users;
 		}
 		
+		// в цикле формируем объекты пользователей
 		for (int i=0; i<jsonUsers.length(); i++) {
 			JSONObject jsonUser = jsonUsers.getJSONObject(i);
 			
@@ -140,6 +159,9 @@ public class User extends NetworkEntity implements Parcelable {
 		readFromParcel(in);
 	}
 	
+	/**
+	 * Записываем объект в парцел
+	 */
 	public void writeToParcel(Parcel out, int flags) {
 		out.writeInt(this.id);
 		out.writeString(this.login);
@@ -162,6 +184,10 @@ public class User extends NetworkEntity implements Parcelable {
         }
     };		
     
+    /**
+     * Считываем пользователя из парцела
+     * @param in
+     */
     private void readFromParcel(Parcel in) {
     	this.id = in.readInt();
     	this.login = in.readString();

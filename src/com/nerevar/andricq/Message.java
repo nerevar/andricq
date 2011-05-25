@@ -17,13 +17,19 @@ import android.os.Parcelable;
 import com.nerevar.andricq.errors.EmptyResponseException;
 import com.nerevar.andricq.errors.UnknownServerResponseException;
 
+/***
+ * Класс Сообщение
+ */
 public class Message extends NetworkEntity implements Parcelable {
-	public String date_str;
-	public String from;
-	public String to;
-	public String message;
-	boolean yours = true;
+	public String date_str; // дата сообщения
+	public String from; // автор сообщения
+	public String to; // получатель сообщения
+	public String message; // текст сообщения
+	boolean yours = true; // флаг - моё ли сообщение
 	
+	/**
+	 * Конструктор
+	 */
 	public Message(String from, String to, String message, boolean yours) {
 		this.from = from;
 		this.to = to;
@@ -31,6 +37,9 @@ public class Message extends NetworkEntity implements Parcelable {
 		this.yours = yours;
 	}
 
+	/**
+	 * Конструктор
+	 */
 	public Message(String date, String from, String to, String message, boolean yours) {
 		this.date_str = date;
 		this.from = from;
@@ -39,23 +48,21 @@ public class Message extends NetworkEntity implements Parcelable {
 		this.yours = yours;
 	}	
 	
-	
 	/**
 	 * Отправляет сообщение на сервер
-	 * @param message - текст сообщения
-	 * @param from - имя пользователя От кого
-	 * @param to - имя пользователя Кому
 	 * @return
 	 */
 	public void send() 
 	throws IOException, JSONException, EmptyResponseException, UnknownServerResponseException 
 	{
+		// формируем параметры запроса
 		List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
 		nameValuePairs.add(new BasicNameValuePair("type", "send_message"));
 		nameValuePairs.add(new BasicNameValuePair("message", this.message));
 		nameValuePairs.add(new BasicNameValuePair("from", this.from));
 		nameValuePairs.add(new BasicNameValuePair("to", this.to));
 
+		// отправляем запрос
 		String response = postData(SERVER, nameValuePairs);
 		if (response == null) {
 			throw new EmptyResponseException();
@@ -63,6 +70,7 @@ public class Message extends NetworkEntity implements Parcelable {
 		
 		HashMap<String, String> resp = parseJSON(response);
 		
+		// результат
 		if (resp != null) {
 			if (resp.containsKey("result")) {
 				if (resp.get("result").toString().equals("ok")) {
@@ -75,18 +83,21 @@ public class Message extends NetworkEntity implements Parcelable {
 	}	
 	
 	
-	
 	/**
-	 * Загружает список сообщений
+	 * Загружает и возвращает список историю сообщений
+	 * @param user - icq пользователь
+	 * @param buddy - для этого пользователя 
 	 */
 	public static ArrayList<Message> loadMessages(String user, String buddy) 
 	throws IOException, JSONException, EmptyResponseException
 	{
+		// формируем параметры запроса
 		List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
 		nameValuePairs.add(new BasicNameValuePair("type", "load_messages"));
 		nameValuePairs.add(new BasicNameValuePair("buddy", buddy));
 		nameValuePairs.add(new BasicNameValuePair("user", user));
 
+		// отправляем запрос
 		String response = postData(SERVER, nameValuePairs);
 		if (response == null) {
 			throw new EmptyResponseException();
@@ -96,6 +107,7 @@ public class Message extends NetworkEntity implements Parcelable {
 		
 		JSONObject json = new JSONObject(response);
 		
+		// получаем json массив с сообщениями
 		JSONArray jsonMessages = null;
 		try {
 			jsonMessages = json.getJSONArray("info");
@@ -103,9 +115,11 @@ public class Message extends NetworkEntity implements Parcelable {
 			return messages;
 		}
 
+		// в цикле формируем каждое сообщение
 		for (int i=0; i<jsonMessages.length(); i++) {
 			JSONObject jsonMessage = jsonMessages.getJSONObject(i);
 			
+			// определяем принадлежность сообщения
 			boolean isBelongToMe = false;
 			if (jsonMessage.getString("from").equals(user)) {
 				isBelongToMe = true;

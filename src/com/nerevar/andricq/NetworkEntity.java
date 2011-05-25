@@ -21,7 +21,13 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+/***
+ * Наследуемая сущность, содержит методы для работы с сетью
+ */
 public class NetworkEntity {
+	/**
+	 * Сервер для подключения
+	 */
 	//public static final String SERVER = "http://192.168.1.77/api.php";	
 	public static final String SERVER = "http://andricq.nerevar.com/api.php";
 

@@ -23,49 +23,27 @@ import com.nerevar.andricq.errors.UnknownServerResponseException;
  */
 public class AndrICQ extends NetworkEntity implements Parcelable{
 
-	public String login;	
-	public String buddy; 
-	public int buddy_id;
-	public ArrayList<User> UserList = new ArrayList<User>();		
+	public String login; // icq логин	
+	public String buddy; // логин собеседника
+	public int buddy_id; // id собеседника
+	public ArrayList<User> UserList = new ArrayList<User>(); // список пользователей		
 	
+	/**
+	 * Задаёт собеседника
+	 * @param buddy_id
+	 * @param buddy
+	 */
 	public void setBuddy(int buddy_id, String buddy) {
 		this.buddy = buddy;
 		this.buddy_id = buddy_id;
 	}
 	
-	public void writeToParcel(Parcel out, int flags) {
-        out.writeString(this.login);
-        out.writeInt(this.buddy_id);
-        out.writeString(this.buddy);
-        //out.writeList(UserList);
-        out.writeTypedList(UserList);
-    }
-	
-    public AndrICQ(Parcel in) {
-    	this.login = in.readString();
-    	this.buddy_id = in.readInt();
-    	this.buddy = in.readString();
-    	in.readTypedList(this.UserList, User.CREATOR);
-    }
-    
-    public int describeContents() {
-        return 0;
-    }
 
-    public static final Parcelable.Creator<AndrICQ> CREATOR = new Parcelable.Creator<AndrICQ>() {
-        public AndrICQ createFromParcel(Parcel in) {
-            return new AndrICQ(in);
-        }
-
-        public AndrICQ[] newArray(int size) {
-            return new AndrICQ[size];
-        }
-    };
-
-	public AndrICQ(){
-		
-	}
-	
+	/**
+	 * Ищет и возвращает пользователя по логину
+	 * @param login
+	 * @return
+	 */
 	public User findUser(String login) {
 		Iterator<User> it = UserList.iterator();
 		while (it.hasNext()) {
@@ -146,5 +124,39 @@ public class AndrICQ extends NetworkEntity implements Parcelable{
 		}		
 		throw new UnknownServerResponseException();
 	}
+	
+	/* ============================================================================================ */
+	
+	public void writeToParcel(Parcel out, int flags) {
+        out.writeString(this.login);
+        out.writeInt(this.buddy_id);
+        out.writeString(this.buddy);
+        out.writeTypedList(UserList);
+    }
+	
+    public AndrICQ(Parcel in) {
+    	this.login = in.readString();
+    	this.buddy_id = in.readInt();
+    	this.buddy = in.readString();
+    	in.readTypedList(this.UserList, User.CREATOR);
+    }
+    
+    public int describeContents() {
+        return 0;
+    }
+
+    public static final Parcelable.Creator<AndrICQ> CREATOR = new Parcelable.Creator<AndrICQ>() {
+        public AndrICQ createFromParcel(Parcel in) {
+            return new AndrICQ(in);
+        }
+
+        public AndrICQ[] newArray(int size) {
+            return new AndrICQ[size];
+        }
+    };
+
+	public AndrICQ(){
+		
+	}	
 		
 }
