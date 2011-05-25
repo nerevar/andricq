@@ -21,13 +21,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class ChatActivity extends Activity {
-	AndrICQ icq = null;
-	ArrayList<Message> Messages = null;
-	User Buddy = null; 
+	AndrICQ icq = null; // объект icq
+	ArrayList<Message> Messages = null; // список сообщения
+	User Buddy = null; // собеседник
 		
 	private MessagesListAdapter ad = null;
 	private ListView mList = null;
 	
+	// Проверка новых сообщений каждые 3 секунды
 	private Handler handler = new Handler();
 	private Runnable timerAction = new Runnable() {
 		public void run() {
@@ -36,6 +37,7 @@ public class ChatActivity extends Activity {
 		}
 	};	
 	
+	// Отправка сообщений по enter при вводе текста
 	TextView.OnEditorActionListener onSendListener = new TextView.OnEditorActionListener(){
 		public boolean onEditorAction(TextView exampleView, int actionId, KeyEvent event) {
 			if(actionId == EditorInfo.IME_NULL){
@@ -64,10 +66,9 @@ public class ChatActivity extends Activity {
 		
 		fetchNewMessages();
 		
+		// задаём отправку сообщений по enter
 		EditText text = (EditText) findViewById(R.id.chat_text);
 		text.setOnEditorActionListener(onSendListener);
-
-		
 	}
 
 	@Override
@@ -84,6 +85,9 @@ public class ChatActivity extends Activity {
 		handler.removeCallbacks(timerAction);
 	}	
 	
+	/**
+	 * Получаем сообщения с сервера
+	 */
 	public void fetchNewMessages() {
 		try {
 			// загрузка сообщений собеседника
@@ -97,13 +101,11 @@ public class ChatActivity extends Activity {
 		}
 	}
 	
+	/**
+	 * Проверяет новые сообщения
+	 */
 	public void checkNewMessages() {
-		int unread = 0;
-		try {
-			unread = Buddy.checkNewMessages(icq.login);
-		} catch (Exception e) {
-			t("Ошибка при обновлении сообщений: " + e);
-		}
+		int unread = Buddy.checkNewMessages(icq.login);
 		
 		if (unread > 0) {
 			fetchNewMessages();
@@ -115,6 +117,9 @@ public class ChatActivity extends Activity {
 		Toast.makeText(getApplicationContext(), text, Toast.LENGTH_LONG).show();
 	}
 	
+	/**
+	 * Адаптер для списка сообщений
+	 */
 	private class MessagesListAdapter extends ArrayAdapter<Message> {
 
         private ArrayList<Message> mData = new ArrayList<Message>();
@@ -181,6 +186,7 @@ public class ChatActivity extends Activity {
 		String from = icq.login;
 		String to = icq.buddy;
 		
+		// отправляем сообщение
 		if ((message != null) && (message.length() > 0)) {		
 			try {
 				Message m = icq.findUser(to).sendMessage(from, message);

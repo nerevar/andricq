@@ -18,10 +18,14 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+/**
+ * Список пользователей
+ */
 public class UsersActivity extends Activity {
-	AndrICQ icq = null;
+	AndrICQ icq = null; 
 	ListView uList = null;
 		
+	// каждые 5 секунд загружаем пользователей
 	private Handler handler = new Handler();
 	private Runnable timerAction = new Runnable() {
 		public void run() {
@@ -42,6 +46,7 @@ public class UsersActivity extends Activity {
 
 		uList = (ListView) findViewById(R.id.usersListView);
 		
+		// клик по элементу в списке
 		uList.setOnItemClickListener(new OnItemClickListener() {
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 				User u = (User) uList.getItemAtPosition(position);
@@ -72,7 +77,9 @@ public class UsersActivity extends Activity {
 		handler.removeCallbacks(timerAction);
 	}
 	
-
+	/**
+	 * Загружает список пользователей
+	 */
 	public void reloadUsersList() {
 		try {
 			// get users list from server
@@ -95,6 +102,9 @@ public class UsersActivity extends Activity {
 	}
 
 	
+	/**
+	 * Адаптер для формирования списка пользователей
+	 */
 	private class UsersListAdapter extends ArrayAdapter<User> {
 
         private ArrayList<User> mData = new ArrayList<User>();
@@ -141,8 +151,7 @@ public class UsersActivity extends Activity {
 					} else {
 						tt.setText(u.login);
 					}
-					// TODO: new messages
-				
+
 					bt.setText("status: " + u.status);
 				
 					if (u.status.equals("online")) {
