@@ -10,13 +10,12 @@
 		android:id="@+id/buddy_name"
 		android:layout_width="wrap_content"
 		android:text="TextView"
-		android:layout_alignParentTop="true"></TextView>
+		android:layout_alignParentTop="true" android:layout_centerHorizontal="true"></TextView>
 
 	<ListView
 		android:id="@+id/listView1"
 		android:layout_height="fill_parent"
 		android:layout_width="fill_parent"
-		android:layout_alignParentTop="true"
 		android:layout_below="@+id/buddy_name"
 		android:layout_above="@+id/bottom_chat_input"
 		android:transcriptMode="alwaysScroll">
