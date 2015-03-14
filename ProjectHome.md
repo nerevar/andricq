@@ -1,0 +1,1 @@
+Educational project AndrICQ is the online ICQ chat for android OS cell phones with java-based client part for android and PHP web server, using json over http-protocol for data exchange
